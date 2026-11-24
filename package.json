@@ -1,0 +1,9 @@
+{
+  "name": "krylo",
+  "version": "1.0.0",
+  "description": "Open-source aerodynamic analysis: panel method, lifting-line theory, standard atmosphere and flight performance.",
+  "main": "web/krylo.js",
+  "scripts": { "test": "node tests/run.js" },
+  "keywords": ["aerodynamics", "airfoil", "panel-method", "lifting-line", "aerospace", "education"],
+  "license": "MIT"
+}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Krylo — aerodynamic analysis</title>
+<meta name="description" content="Krylo: free, open-source aerodynamic analysis in the browser — panel method, lifting-line theory, standard atmosphere and flight performance.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a precise engineering instrument — calm, dense, trustworthy.
+   IDEA: a wind-tunnel test bench: numbers on the left, live plots on the right.
+   PICTURE: the airfoil and its pressure distribution, drawn at real proportions.
+   COLOUR and TYPE: deep navy ink on white; Ukrainian blue for data, yellow for the operating point. IBM Plex Sans/Mono.
+   LAYOUT: sticky tab bar; each tool = control column + plot column; stacks on phones. */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#0a1422);--ink:light-dark(#0b1f3a,#e6edf7);--mut:light-dark(#53627a,#9fb1c9);--line:light-dark(#dbe3ee,#1e3352);--pan:light-dark(#f3f6fa,#0f1e33);--blue:light-dark(#0057b7,#6aa8f5);--red:light-dark(#b3261e,#ff8a80);--yel:#ffd500;--navy:#0b1f3a}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif;overflow-x:clip}
+a{color:var(--blue)}
+header{background:var(--navy);color:#fff}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(4vw,16px)}
+.hd{display:flex;align-items:center;gap:14px;flex-wrap:wrap;min-height:60px;padding-block:8px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:18px}
+.logo small{font-weight:400;color:#b8c7dc;font-size:13px;display:block}
+.sp{flex:1}
+.hb{min-height:38px;padding:0 12px;border:1px solid #2d4a72;background:transparent;color:#fff;border-radius:6px;font:inherit;font-size:14px;cursor:pointer}
+.hb[aria-pressed=true]{background:#fff;color:var(--navy)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs a{flex:none;padding:13px 14px;color:var(--mut);text-decoration:none;font-weight:500;border-bottom:2px solid transparent}
+nav.tabs a[aria-current=page]{color:var(--ink);border-color:var(--blue)}
+main{padding:28px 0 60px}
+h1{font-size:clamp(26px,3.2vw,36px);line-height:1.1;margin:0 0 6px;font-weight:600;text-wrap:balance}
+h2{font-size:20px;margin:0 0 10px;font-weight:600}
+.lead{color:var(--mut);margin:0 0 22px;max-width:70ch}
+.tool{display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);gap:28px;align-items:start}
+.panel{border:1px solid var(--line);border-radius:10px;padding:16px}
+.field{margin-bottom:14px}
+label{display:flex;justify-content:space-between;gap:8px;font-size:14.5px;font-weight:500;margin-bottom:4px}
+label output{font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+input[type=range]{width:100%;accent-color:#0057b7;min-height:30px}
+input[type=text],input[type=number],textarea,select{width:100%;font:inherit;font-size:16px;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);min-height:42px}
+textarea{font-family:"IBM Plex Mono",monospace;font-size:13px;min-height:150px}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;margin-bottom:14px}
+.seg button{flex:1;min-height:40px;border:0;background:transparent;color:var(--mut);font:inherit;font-weight:500;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--blue);color:light-dark(#fff,#0a1422)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border-radius:7px;border:1px solid var(--blue);background:var(--blue);color:light-dark(#fff,#0a1422);font:inherit;font-weight:500;cursor:pointer;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--blue)}
+.btn.sm{min-height:34px;font-size:14px;padding:0 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+.res{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(140px,100%),1fr));margin-bottom:16px}
+.res div{background:var(--pan);border-radius:8px;padding:10px 12px}
+.res span{display:block;font-size:13px;color:var(--mut)}
+.res b{font-family:"IBM Plex Mono",monospace;font-size:21px;font-weight:500;white-space:nowrap}
+.chart{border:1px solid var(--line);border-radius:10px;padding:10px 10px 4px;margin-bottom:16px}
+.chart h3{font-size:14px;font-weight:600;margin:2px 4px 6px;color:var(--mut)}
+.chart svg{display:block;width:100%;height:auto;color:var(--ink)}
+.note{font-size:14px;color:var(--mut);border-left:3px solid var(--yel);padding:4px 0 4px 12px;margin:0 0 16px}
+.err{color:var(--red);font-size:14px;min-height:1em}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+td.n,th.n{text-align:right;font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+.scroll{overflow-x:auto}
+.ok{color:light-dark(#1d7a46,#5fd08f);font-weight:600}.bad{color:var(--red);font-weight:600}
+.prose{max-width:76ch}.prose h2{margin-top:28px}.prose code{font-family:"IBM Plex Mono",monospace;font-size:.92em;background:var(--pan);padding:1px 5px;border-radius:4px}
+footer{border-top:1px solid var(--line);color:var(--mut);font-size:14px;padding:22px 0}
+@media(max-width:860px){.tool{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<header><div class="wrap hd">
+<div class="logo"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="7" fill="#0057b7"/><path d="M5 20C10 12 22 11 30 17C22 19 13 21 5 20Z" fill="#fff"/><path d="M17 8v6" stroke="#ffd500" stroke-width="2.5" stroke-linecap="round"/></svg><span>Krylo<small id="tagline"></small></span></div>
+<div class="sp"></div>
+<div class="row" style="gap:0" role="group" aria-label="Language / Мова"><button class="hb" data-lang="en" style="border-radius:6px 0 0 6px">EN</button><button class="hb" data-lang="uk" style="border-radius:0 6px 6px 0;border-left:0">УК</button></div>
+<a class="hb" id="gh" href="#about" style="display:inline-flex;align-items:center;text-decoration:none">Source · MIT</a>
+</div></header>
+<nav class="tabs" aria-label="Tools"><div class="wrap" id="tabs"></div></nav>
+<main><div class="wrap" id="main"></div></main>
+<footer><div class="wrap" id="foot"></div></footer>
+<script src="krylo.js"></script>
+<script src="validation.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
